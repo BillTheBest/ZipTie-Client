@@ -14,7 +14,7 @@ Version 0.9
 
 =cut
 
-$VERSION = "0.1";
+$VERSION = "1.0";
 
 =head1 SYNOPSIS
 
@@ -67,7 +67,7 @@ the same as the port name.
 
   # These two lines do the same thing.
   $port = $client->port("devices");
-  $port = $client->device();
+  $port = $client->devices();
 =cut
 sub port
 {
@@ -115,7 +115,7 @@ use SOAP::Lite;
 
 use constant DEBUG => 0;
 
-$VERSION = "0.1";
+$VERSION = "1.0";
 
 sub new
 {
@@ -244,7 +244,7 @@ under the License.
 The Original Code is ZipTie.
 
 The Initial Developer of the Original Code is AlterPoint.
-Portions created by AlterPoint are Copyright (C) 2007,
+Portions created by AlterPoint are Copyright (C) 2007-2008,
 AlterPoint, Inc. All Rights Reserved.
 
 =head1 AUTHOR

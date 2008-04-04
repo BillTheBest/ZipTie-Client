@@ -17,7 +17,7 @@ my %data = (key => 'ipResolutionData', value => $devices);
 my %param_map = (entry => [\%scheme, \%data]);
 
 my %job = (description => 'Perl initiated configuration backup.',
-           jobGroup => 'Run now',
+           jobGroup => '_interactive',
            jobName => 'Perl Backup ' . time(),
            jobType => 'Backup Configuration',
            jobParameters => \%param_map);

@@ -1,5 +1,7 @@
 AUTHORS
 MANIFEST
+LICENSE
+README
 Makefile.PL
 lib/ZipTie/Client.pm
 backup.pl

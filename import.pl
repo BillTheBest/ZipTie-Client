@@ -17,6 +17,8 @@ my @devices;
 my @failed;
 while (<CSV>)
 {
+    chomp;
+
     my ($ip_address, $hostname, $adapter_id, $folder) = split(/,/);
     next unless ($ip_address =~ /^\d+/);
 
