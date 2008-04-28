@@ -14,7 +14,7 @@ Version 0.9
 
 =cut
 
-$VERSION = "1.1";
+$VERSION = "1.2";
 
 =head1 SYNOPSIS
 
@@ -141,7 +141,7 @@ use SOAP::Lite 0.69;
 
 use constant DEBUG => 0;
 
-$VERSION = "1.1";
+$VERSION = "1.2";
 
 sub new
 {
