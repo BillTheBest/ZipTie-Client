@@ -14,7 +14,7 @@ Version 0.9
 
 =cut
 
-$VERSION = "1.0";
+$VERSION = "1.1";
 
 =head1 SYNOPSIS
 
@@ -30,6 +30,8 @@ C<ZipTie::Client> is a simple webservice client for a ZipTie server.
 
 =head1 PUBLIC SUB-ROUTINES
 
+=over
+
 =item $client = ZipTie::Client->new( %options )
 Creates the client.
 
@@ -38,6 +40,10 @@ Creates the client.
   host:      The ZipTie server host and port.  (Defaults to 'localhost:8080')
   scheme:    The protocol scheme to use to connect to the server.  (Defaults to 'https')
   on_fault:  The method that will be called when there is an error from the server.  (Default will call C<die()>)
+
+If no username is specified the ZipTie::Client will try to use $ENV{'ZIPTIE_AUTHENTICATION'} to authenticate.  This 
+environment variable is set by the ZipTie server when running script tools.  Authors of script tools my simply create
+an instance of the ZipTie::Client with no options and the authentication will be handled automatically.
 
 =cut
 sub new
@@ -68,6 +74,7 @@ the same as the port name.
   # These two lines do the same thing.
   $port = $client->port("devices");
   $port = $client->devices();
+
 =cut
 sub port
 {
@@ -81,7 +88,26 @@ sub port
         return $port;
     }
 
-    my $proxy_url = $self->{scheme} . '://' . $self->{username} . ':' . $self->{password} . '@' . $self->{host} . '/server/' . $portname;
+    my $auth = '';
+    if ($self->{username})
+    {
+        $auth = $self->{scheme} . '://' . $self->{username} . ':' . $self->{password} . '@' . $self->{host};
+    }
+    else
+    {
+        # Token should be of the form '<scheme>://<user>:<auth-pass>@<host>[:<port>]'
+        my $token = $ENV{'ZIPTIE_AUTHENTICATION'};
+        if ($token)
+        {
+            $auth = $token;
+        }
+        else
+        {
+            confess("Must specify a username and password.");
+        }
+    }
+
+    my $proxy_url = $auth  . '/server/' . $portname;
 
     my $ns_url = 'http://www.ziptie.org/server/' . $portname;
 
@@ -111,11 +137,11 @@ use vars qw($AUTOLOAD $VERSION);
 
 use Carp;
 use HTTP::Cookies;
-use SOAP::Lite;
+use SOAP::Lite 0.69;
 
 use constant DEBUG => 0;
 
-$VERSION = "1.0";
+$VERSION = "1.1";
 
 sub new
 {
@@ -228,6 +254,8 @@ sub AUTOLOAD
 }
 
 1;
+
+=back
 
 =head1 LICENSE
 
