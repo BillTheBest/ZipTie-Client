@@ -8,7 +8,8 @@ use Date::Parse qw(str2time);
 use POSIX qw(strftime);
 use ZipTie::Client;
 
-my $client = ZipTie::Client->new(username => 'admin', password => 'password', host => 'localhost:8080', );
+my $host = shift(@ARGV);
+my $client = ZipTie::Client->new(username => 'admin', password => 'password', host => $host . ':8080', );
 
 my $configstore = $client->configstore();
 
@@ -33,7 +34,7 @@ elsif ($op eq 'file')
     
     my $date = shift(@ARGV);
 
-    $date = strftime("%Y-%m-%dT%H:%M:%S", $date ? localtime(str2time($date)) : gmtime());
+    $date = $date ? strftime("%Y-%m-%dT%H:%M:%S", localtime(str2time($date))) : undef;
 
     # add a preceeding slash if there isn't already one.
     $file =~ s|^([^/])|/$1|;

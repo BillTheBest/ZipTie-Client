@@ -10,11 +10,11 @@ ZipTie::Client - Webservice client for the ZipTie server
 
 =head1 VERSION
 
-Version 0.9
+Version 1.3
 
 =cut
 
-$VERSION = "1.2";
+$VERSION = "1.3";
 
 =head1 SYNOPSIS
 
@@ -22,7 +22,10 @@ use ZipTie::Client;
 
 my $client = ZipTie::Client->new(username => 'admin', password => 'password', host => 'localhost:8080', );
 
-$client->discovery()->discover(addressSets => ['10.1.2.1', '10.1.1.0/24'], crawlNeighbors => 1);
+$client->devices()->createDevice('10.1.2.1', 'Default', 'ZipTie::Adapters::Cisco::IOS');
+
+$client->devicetags()->addTag('HQ');
+$client->devicetags()->tagDevices('HQ', '10.1.2.1@Default');
 
 =head1 DESCRIPTION
 
@@ -88,10 +91,10 @@ sub port
         return $port;
     }
 
-    my $auth = '';
+    my $primary_url = '';
     if ($self->{username})
     {
-        $auth = $self->{scheme} . '://' . $self->{username} . ':' . $self->{password} . '@' . $self->{host};
+        $primary_url = $self->{scheme}. '://' . $self->{host} . '/server/';
     }
     else
     {
@@ -99,7 +102,7 @@ sub port
         my $token = $ENV{'ZIPTIE_AUTHENTICATION'};
         if ($token)
         {
-            $auth = $token;
+            $primary_url = $token;
         }
         else
         {
@@ -107,15 +110,29 @@ sub port
         }
     }
 
-    my $proxy_url = $auth  . '/server/' . $portname;
+    my $proxy_url = $primary_url . $portname;
 
     my $ns_url = 'http://www.ziptie.org/server/' . $portname;
 
-    $port = ZipTie::Client::Port->new($proxy_url, $ns_url, $self->{on_fault});
+    $port = ZipTie::Client::Port->new($self, $proxy_url, $ns_url, $self->{on_fault});
 
     $self->{$portkey} = $port;
 
     return $port;
+}
+
+=item logout
+Logout the client session from the server.  This should always be called for good-housekeeping when you 
+are finished with the client so the server can free resources more quickly.
+
+  $client->logout();
+
+=cut
+sub logout
+{
+    my $self = shift;
+
+    $self->port("security")->logoutCurrentUser();
 }
 
 sub AUTOLOAD
@@ -137,18 +154,35 @@ use vars qw($AUTOLOAD $VERSION);
 
 use Carp;
 use HTTP::Cookies;
+use HTTP::Response;
 use SOAP::Lite 0.69;
+use LWP::UserAgent;
 
 use constant DEBUG => 0;
 
-$VERSION = "1.2";
+$VERSION = "1.3";
 
 sub new
 {
-    my ($pkg, $proxy_url, $ns_url, $on_fault) = @_;
+    my ($pkg, $client, $proxy_url, $ns_url, $on_fault) = @_;
+
+    my $cookie_jar = HTTP::Cookies->new(ignore_discard => 1);
+
+    my $auth = $client->{scheme} . '://' . $client->{host} . '/server';
+    if ($client->{username})
+    {
+        $auth .= '?j_username=' . $client->{username} . '&j_password=' . $client->{password};
+
+        my $ua = LWP::UserAgent->new(cookie_jar => $cookie_jar);
+        my $response = $ua->head($auth);
+        if (!$response->is_success)
+        {
+            die $response->status_line;
+        }
+    }
 
     my $proxy = SOAP::Lite
-        -> proxy($proxy_url, cookie_jar => HTTP::Cookies->new(ignore_discard => 1))
+        -> proxy($proxy_url, cookie_jar => $cookie_jar)
         -> uri($ns_url);
 
     $proxy->on_fault($on_fault || \&_on_fault);
